@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,9 +27,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.chess.figures.Bishop
 import com.example.chess.figures.Figure
 import com.example.chess.figures.Knight
 import com.example.chess.figures.Pawn
+import com.example.chess.figures.Rook
 import com.example.chess.ui.theme.ChessTheme
 
 class MainActivity : ComponentActivity() {
@@ -55,7 +56,12 @@ fun MainBoard() {
     var colorToMove = remember { mutableStateOf(Color.LightGray) }
     val figures = remember { mutableStateListOf<Figure>(
         // White figures
+        Rook(0, 0, Color.LightGray),
+        Rook(7, 0, Color.LightGray),
         Knight(1, 0, Color.LightGray),
+        Knight(6, 0, Color.LightGray),
+        Bishop(2, 0, Color.LightGray),
+        Bishop(5, 0, Color.LightGray),
         // White pawns
         Pawn(0, 1, Color.LightGray),
         Pawn(1, 1, Color.LightGray),
@@ -67,7 +73,12 @@ fun MainBoard() {
         Pawn(7, 1, Color.LightGray),
 
         //Black figures
+        Rook(0, 7, Color.DarkGray),
+        Rook(7, 7, Color.DarkGray),
         Knight(6, 7, Color.DarkGray),
+        Knight(1, 7, Color.DarkGray),
+        Bishop(2, 7, Color.DarkGray),
+        Bishop(5, 7, Color.DarkGray),
         // Black pawns
         Pawn(0, 6, Color.DarkGray),
         Pawn(1, 6, Color.DarkGray),
@@ -107,23 +118,33 @@ fun MainBoard() {
                                         Log.i("Selected", "Selected: $selectedX $selectedY")
                                     }
                                 } else {
-                                    // if the selected square is clicked again, cancel the move.
-                                    if (selectedX == j && selectedY == i) {
+                                    if (selectedX == j && selectedY == i) { // if the selected square is clicked again, cancel the move.
                                         isMoving = false
                                         chosenSquare = Pair(-1, -1)
-                                    }
-                                    // Second click: attempt to move the selected figure.
-                                    figures.firstOrNull { it.x == selectedX && it.y == selectedY }?.let { figure ->
-                                        if (figure.checkIfLegalMove(j, i) && (figure.name != "Pawn" || !isSpaceOccupied(j, i, figures))) {
-                                            figure.move(j, i)
-                                            if(figure.name == "Pawn" && (figure as Pawn).isFirstMove){
-                                                figure.setFirstMove()
-                                            }
-                                            isMoving = false
-                                            chosenSquare = Pair(-1, -1)
-                                            colorToMove.value = changeColor(colorToMove.value)
-                                        }
+                                    }else { // Second click: attempt to move the selected figure.
+                                        figures.firstOrNull { it.x == selectedX && it.y == selectedY }
+                                            ?.let { figure ->
+                                                if (figure.checkIfLegalMove(j, i, figures) && !isSpaceOccupiedByTeam(j, i, figures, colorToMove.value)) {
+                                                    figure.move(j, i)
+                                                    if (figure.name == "Pawn" && (figure as Pawn).isFirstMove) {
+                                                        figure.setFirstMove()
+                                                    }
+                                                    isMoving = false
+                                                    chosenSquare = Pair(-1, -1)
+                                                    if (isSpaceOccupiedByOpponent(
+                                                            j,
+                                                            i,
+                                                            figures,
+                                                            colorToMove.value
+                                                        )
+                                                    ) {
+                                                        figures.remove(figures.first { it.x == j && it.y == i && it.color != colorToMove.value })
+                                                    }
+                                                    colorToMove.value =
+                                                        changeColor(colorToMove.value)
+                                                }
 
+                                            }
                                     }
                                 }
                             }
@@ -152,8 +173,12 @@ fun changeColor(color: Color): Color {
     return if(color == Color.LightGray) Color.DarkGray else Color.LightGray
 }
 
-fun isSpaceOccupied(x: Int, y: Int, figures: List<Figure>): Boolean {
-    return figures.any { it.x == x && it.y == y }
+fun isSpaceOccupiedByTeam(x: Int, y: Int, figures: List<Figure>, color: Color): Boolean {
+    return figures.any { it.x == x && it.y == y && it.color == color }
+}
+
+fun isSpaceOccupiedByOpponent(x: Int, y: Int, figures: List<Figure>, color: Color): Boolean {
+    return figures.any { it.x == x && it.y == y && it.color != color }
 }
 
 @Preview(showBackground = true)

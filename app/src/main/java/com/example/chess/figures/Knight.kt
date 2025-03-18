@@ -6,7 +6,7 @@ class Knight(x: Int, y: Int, color: Color) : Figure(x, y, color) {
     override val name = "Knight"
     override val icon = "♞"
 
-    override fun checkIfLegalMove(newX: Int, newY: Int): Boolean {
+    override fun checkIfLegalMove(newX: Int, newY: Int, figures: List<Figure>): Boolean {
         return when {
             x + 2 == newX && y + 1 == newY -> true
             x + 2 == newX && y - 1 == newY -> true

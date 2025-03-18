@@ -16,7 +16,7 @@ open class Figure(x: Int, y: Int, var color: Color) {
         y = newY
     }
 
-    open fun checkIfLegalMove(newX: Int, newY: Int): Boolean {
+    open fun checkIfLegalMove(newX: Int, newY: Int, figures: List<Figure>): Boolean {
         return true
     }
 }
